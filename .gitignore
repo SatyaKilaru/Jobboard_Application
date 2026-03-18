@@ -1,12 +1,21 @@
-# Go
+# Binaries
 */bin/
+
+# Environment files (secrets)
+.env
 */.env
-*/go.sum
+!*.env.example
 
 # Node
 frontend/node_modules/
 frontend/dist/
 
-# Misc
-.DS_Store
+# Logs
 *.log
+/tmp/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

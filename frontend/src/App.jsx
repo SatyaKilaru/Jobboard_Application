@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { warmupServices } from '@/lib/warmup'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import LoginPage from '@/pages/LoginPage'
@@ -15,6 +17,8 @@ import CompanyDetailPage from '@/pages/CompanyDetailPage'
 const queryClient = new QueryClient()
 
 export default function App() {
+  useEffect(() => { warmupServices() }, [])
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

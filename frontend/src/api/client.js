@@ -27,12 +27,18 @@ const processQueue = (error, token = null) => {
   failedQueue = []
 }
 
+// Auth endpoints that legitimately return 401 — never trigger token refresh for these
+const SKIP_REFRESH = ['auth/login', 'auth/register', 'auth/refresh']
+
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+    const url = originalRequest?.url || ''
 
-    const isAuthEndpoint = originalRequest.url?.match(/\/auth\/(login|register|refresh)/)
+    // Check if this is an auth endpoint — skip refresh to preserve the original error
+    const isAuthEndpoint = SKIP_REFRESH.some(ep => url.includes(ep))
+
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -47,7 +53,7 @@ client.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const { data } = await axios.post('/api/v1/auth/refresh', {}, { withCredentials: true })
+        const { data } = await axios.post(`${API_BASE}/auth/refresh`, {}, { withCredentials: true })
         setAccessToken(data.access_token)
         processQueue(null, data.access_token)
         originalRequest.headers.Authorization = `Bearer ${data.access_token}`
@@ -55,7 +61,10 @@ client.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
         setAccessToken(null)
-        window.location.href = '/login'
+        // Don't redirect if already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login'
+        }
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

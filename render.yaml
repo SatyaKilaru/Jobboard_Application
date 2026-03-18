@@ -1,0 +1,98 @@
+databases:
+  - name: jobboard-db
+    plan: free
+    databaseName: jobboard
+    user: jobboard
+
+services:
+  # --- Auth Service ---
+  - type: web
+    name: jobboard-auth
+    runtime: docker
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobboard-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: PORT
+        value: "8081"
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: ENV
+        value: production
+    healthCheckPath: /health
+
+  # --- Jobs Service ---
+  - type: web
+    name: jobboard-jobs
+    runtime: docker
+    dockerfilePath: ./jobs-service/Dockerfile
+    dockerContext: ./jobs-service
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobboard-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: PORT
+        value: "8082"
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: ENV
+        value: production
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_APP_KEY
+        sync: false
+    healthCheckPath: /health
+
+  # --- Applications Service ---
+  - type: web
+    name: jobboard-applications
+    runtime: docker
+    dockerfilePath: ./applications-service/Dockerfile
+    dockerContext: ./applications-service
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobboard-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: PORT
+        value: "8083"
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: ENV
+        value: production
+    healthCheckPath: /health
+
+  # --- API Gateway ---
+  - type: web
+    name: jobboard-gateway
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
+    plan: free
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: AUTH_SERVICE_URL
+        value: https://jobboard-auth.onrender.com
+      - key: JOBS_SERVICE_URL
+        value: https://jobboard-jobs.onrender.com
+      - key: APPLICATIONS_SERVICE_URL
+        value: https://jobboard-applications.onrender.com
+      - key: FRONTEND_ORIGIN
+        sync: false
+    healthCheckPath: /health

@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"jobboard/auth-service/internal/auth"
@@ -50,12 +49,6 @@ func main() {
 
 	engine := gin.New()
 	engine.Use(middleware.RequestLogger(), gin.Recovery())
-	engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{cfg.FrontendOrigin},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
-		AllowCredentials: true,
-	}))
 
 	h := auth.NewHandler(pool, cfg)
 	authMiddleware := auth.RequireAuth(cfg)

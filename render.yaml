@@ -21,8 +21,6 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
-      - key: PORT
-        value: "8081"
       - key: FRONTEND_ORIGIN
         sync: false
       - key: ENV
@@ -43,8 +41,6 @@ services:
           property: connectionString
       - key: JWT_ACCESS_SECRET
         sync: false
-      - key: PORT
-        value: "8082"
       - key: FRONTEND_ORIGIN
         sync: false
       - key: ENV
@@ -69,8 +65,6 @@ services:
           property: connectionString
       - key: JWT_ACCESS_SECRET
         sync: false
-      - key: PORT
-        value: "8083"
       - key: FRONTEND_ORIGIN
         sync: false
       - key: ENV
@@ -85,14 +79,12 @@ services:
     dockerContext: ./api-gateway
     plan: free
     envVars:
-      - key: PORT
-        value: "8080"
       - key: AUTH_SERVICE_URL
-        value: https://jobboard-auth.onrender.com
+        sync: false
       - key: JOBS_SERVICE_URL
-        value: https://jobboard-jobs.onrender.com
+        sync: false
       - key: APPLICATIONS_SERVICE_URL
-        value: https://jobboard-applications.onrender.com
+        sync: false
       - key: FRONTEND_ORIGIN
         sync: false
     healthCheckPath: /health

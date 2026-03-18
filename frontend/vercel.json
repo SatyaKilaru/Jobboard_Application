@@ -4,8 +4,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://jobboard-gateway-l59x.onrender.com/api/:path*"
+      "source": "/api/v1/:path*",
+      "destination": "https://jobboard-gateway-l59x.onrender.com/api/v1/:path*"
     }
   ],
   "headers": [

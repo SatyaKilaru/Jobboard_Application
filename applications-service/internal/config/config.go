@@ -23,6 +23,13 @@ func Load() *Config {
 		DatabaseURL:     os.Getenv("DATABASE_URL"),
 		JWTAccessSecret: os.Getenv("JWT_ACCESS_SECRET"),
 		Port:            port,
-		FrontendOrigin:  os.Getenv("FRONTEND_ORIGIN"),
+		FrontendOrigin:  getEnv("FRONTEND_ORIGIN", "*"),
 	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

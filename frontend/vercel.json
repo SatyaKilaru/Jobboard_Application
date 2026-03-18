@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://GATEWAY_URL_HERE/api/:path*"
+      "destination": "https://jobboard-gateway-l59x.onrender.com/api/:path*"
     }
   ],
   "headers": [

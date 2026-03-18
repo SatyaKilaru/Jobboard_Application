@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { loginApi } from '@/api/auth'
 import { apiHelper } from '@/api/apiHelper'
@@ -10,6 +10,7 @@ import { Briefcase, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
@@ -32,7 +33,8 @@ export default function LoginPage() {
       return
     }
     login(data.access_token, data.user)
-    navigate('/dashboard')
+    const redirectTo = location.state?.from || '/dashboard'
+    navigate(redirectTo)
   }
 
   return (

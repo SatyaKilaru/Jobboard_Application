@@ -26,7 +26,7 @@ func Load() *Config {
 		DatabaseURL:     os.Getenv("DATABASE_URL"),
 		JWTAccessSecret: os.Getenv("JWT_ACCESS_SECRET"),
 		Port:            port,
-		FrontendOrigin:  os.Getenv("FRONTEND_ORIGIN"),
+		FrontendOrigin:  getEnv("FRONTEND_ORIGIN", "*"),
 		Env:             os.Getenv("ENV"),
 		AdzunaAppID:     os.Getenv("ADZUNA_APP_ID"),
 		AdzunaAppKey:    os.Getenv("ADZUNA_APP_KEY"),
@@ -35,4 +35,11 @@ func Load() *Config {
 
 func (c *Config) IsProduction() bool {
 	return c.Env == "production"
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

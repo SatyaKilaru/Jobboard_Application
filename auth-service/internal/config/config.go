@@ -26,7 +26,7 @@ func Load() *Config {
 		JWTAccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
 		JWTRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
 		Port:             port,
-		FrontendOrigin:   os.Getenv("FRONTEND_ORIGIN"),
+		FrontendOrigin:   getEnv("FRONTEND_ORIGIN", "*"),
 		Env:              os.Getenv("ENV"),
 	}
 }
@@ -34,4 +34,11 @@ func Load() *Config {
 // IsProduction returns true when running in production environment.
 func (c *Config) IsProduction() bool {
 	return c.Env == "production"
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

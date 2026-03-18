@@ -138,12 +138,12 @@ func (h *Handler) Login(c *gin.Context) {
 		body.Email,
 	).Scan(&user.ID, &user.Email, &user.PasswordHash, &user.FullName, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		apiError(c, http.StatusUnauthorized, constants.ErrCodeInvalidCredentials, "Incorrect email or password")
+		apiError(c, http.StatusNotFound, constants.ErrCodeAccountNotFound, "No account found with this email")
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(body.Password)); err != nil {
-		apiError(c, http.StatusUnauthorized, constants.ErrCodeInvalidCredentials, "Incorrect email or password")
+		apiError(c, http.StatusUnauthorized, constants.ErrCodeWrongPassword, "Incorrect password")
 		return
 	}
 

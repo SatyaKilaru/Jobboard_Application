@@ -102,8 +102,12 @@ func proxyTo(target string) gin.HandlerFunc {
 		os.Exit(1)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(u)
+	defaultDirector := proxy.Director
+	proxy.Director = func(req *http.Request) {
+		defaultDirector(req)
+		req.Host = u.Host
+	}
 	return func(c *gin.Context) {
-		// Strip /api/v1 prefix from the path before proxying
 		c.Request.URL.Path = strings.TrimPrefix(c.Request.URL.Path, "/api/v1")
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}

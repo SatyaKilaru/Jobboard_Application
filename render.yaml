@@ -4,6 +4,18 @@ databases:
     databaseName: jobboard
     user: jobboard
 
+envGroups:
+  - name: jobboard-shared
+    envVars:
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: ENV
+        value: production
+
 services:
   # --- Auth Service ---
   - type: web
@@ -17,14 +29,8 @@ services:
         fromDatabase:
           name: jobboard-db
           property: connectionString
-      - key: JWT_ACCESS_SECRET
-        generateValue: true
-      - key: JWT_REFRESH_SECRET
-        generateValue: true
-      - key: FRONTEND_ORIGIN
-        sync: false
-      - key: ENV
-        value: production
+    envGroups:
+      - jobboard-shared
     healthCheckPath: /health
 
   # --- Jobs Service ---
@@ -39,16 +45,12 @@ services:
         fromDatabase:
           name: jobboard-db
           property: connectionString
-      - key: JWT_ACCESS_SECRET
-        sync: false
-      - key: FRONTEND_ORIGIN
-        sync: false
-      - key: ENV
-        value: production
       - key: ADZUNA_APP_ID
         sync: false
       - key: ADZUNA_APP_KEY
         sync: false
+    envGroups:
+      - jobboard-shared
     healthCheckPath: /health
 
   # --- Applications Service ---
@@ -63,12 +65,8 @@ services:
         fromDatabase:
           name: jobboard-db
           property: connectionString
-      - key: JWT_ACCESS_SECRET
-        sync: false
-      - key: FRONTEND_ORIGIN
-        sync: false
-      - key: ENV
-        value: production
+    envGroups:
+      - jobboard-shared
     healthCheckPath: /health
 
   # --- API Gateway ---
@@ -85,6 +83,6 @@ services:
         sync: false
       - key: APPLICATIONS_SERVICE_URL
         sync: false
-      - key: FRONTEND_ORIGIN
-        sync: false
+    envGroups:
+      - jobboard-shared
     healthCheckPath: /health

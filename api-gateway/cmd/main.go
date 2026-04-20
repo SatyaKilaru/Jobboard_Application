@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -95,6 +97,7 @@ func main() {
 
 // proxyTo creates a Gin handler that reverse-proxies requests to the given target URL.
 // It strips the /api/v1 prefix from the request path before forwarding.
+// Uses a retrying transport so cold-starting downstream services don't cascade 502s.
 func proxyTo(target string) gin.HandlerFunc {
 	u, err := url.Parse(target)
 	if err != nil {
@@ -102,6 +105,7 @@ func proxyTo(target string) gin.HandlerFunc {
 		os.Exit(1)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(u)
+	proxy.Transport = &retryTransport{base: http.DefaultTransport}
 	defaultDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		defaultDirector(req)
@@ -111,4 +115,55 @@ func proxyTo(target string) gin.HandlerFunc {
 		c.Request.URL.Path = strings.TrimPrefix(c.Request.URL.Path, "/api/v1")
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+// retryTransport wraps an http.RoundTripper and retries requests that fail due to
+// upstream cold-start errors (connection refused, timeout) or transient 5xx responses
+// from Render free-tier services that may take 30-60s to wake up.
+type retryTransport struct {
+	base http.RoundTripper
+}
+
+var retryBackoffs = []time.Duration{0, 500 * time.Millisecond, 2 * time.Second, 5 * time.Second}
+
+func (rt *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	var body []byte
+	if req.Body != nil {
+		b, err := io.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		_ = req.Body.Close()
+		body = b
+	}
+
+	var lastResp *http.Response
+	var lastErr error
+
+	for i, delay := range retryBackoffs {
+		if delay > 0 {
+			time.Sleep(delay)
+		}
+		if body != nil {
+			req.Body = io.NopCloser(bytes.NewReader(body))
+		}
+
+		resp, err := rt.base.RoundTrip(req)
+		lastResp, lastErr = resp, err
+
+		if err == nil {
+			if resp.StatusCode != http.StatusBadGateway &&
+				resp.StatusCode != http.StatusServiceUnavailable &&
+				resp.StatusCode != http.StatusGatewayTimeout {
+				return resp, nil
+			}
+			_ = resp.Body.Close()
+		}
+
+		if i < len(retryBackoffs)-1 {
+			slog.Info("retrying upstream (cold-start)", "attempt", i+1, "url", req.URL.String(), "err", err)
+		}
+	}
+
+	return lastResp, lastErr
 }
